@@ -3,6 +3,7 @@ import numpy as np
 from agents.network.base_network import BaseNetwork
 
 
+
 class HydraDDPGNetwork(BaseNetwork):
     def __init__(self, sess, input_norm, config):
         super(HydraDDPGNetwork, self).__init__(sess, config, [config.actor_lr, config.critic_lr])

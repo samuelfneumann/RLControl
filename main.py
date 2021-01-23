@@ -77,6 +77,7 @@ def main():
     log_dir = './results/{}results/log_summary/{}/{}_{}_{}'.format(str(env_json['environment']), str(agent_json['agent']), str(SETTING_NUM), str(RUN_NUM), str(START_DATETIME))
 
     # tf 1.8
+    #writer = tf.summary.create_file_writer(log_dir)
     writer = tf.summary.FileWriter(log_dir)
     # tf 2.0
     # writer = tf.summary.create_file_writer(log_dir)
@@ -104,7 +105,7 @@ def main():
     from experiment import Experiment
     experiment = Experiment(agent=agent, train_environment=train_env, test_environment=test_env, seed=RANDOM_SEED,
                             writer=writer, write_log=args.write_log, write_plot=args.write_plot)
-    
+
     # run experiment
     episode_rewards, eval_episode_mean_rewards, eval_episode_std_rewards, train_episode_steps = experiment.run()
 
