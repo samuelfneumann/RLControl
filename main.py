@@ -61,13 +61,15 @@ def main():
     # get run idx and setting idx
     RUN_NUM = int(args.index / total_num_sweeps)
     SETTING_NUM = args.index % total_num_sweeps
-    print(f"SETTING_NUM: {SETTING_NUM}")
-    print(f"RUN_NUM: {RUN_NUM}")
-    print('Agent setting: ', agent_params)
 
     # set Random Seed (for training)
     RANDOM_SEED = RUN_NUM
     arg_params['random_seed'] = RANDOM_SEED
+
+    print(f"SETTING_NUM: {SETTING_NUM}")
+    print(f"RUN_NUM: {RUN_NUM}")
+    print(f"RANDOM_SEED: {RANDOM_SEED")
+    print('Agent setting: ', agent_params)
 
     # create save directory
     save_dir = './results/' + env_json['environment'] + 'results/'
