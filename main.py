@@ -68,7 +68,7 @@ def main():
 
     print(f"SETTING_NUM: {SETTING_NUM}")
     print(f"RUN_NUM: {RUN_NUM}")
-    print(f"RANDOM_SEED: {RANDOM_SEED")
+    print(f"RANDOM_SEED: {RANDOM_SEED}")
     print('Agent setting: ', agent_params)
 
     # create save directory
