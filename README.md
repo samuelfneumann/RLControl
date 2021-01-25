@@ -55,6 +55,10 @@ etc... That is, INDEX=i mod (#settings) refers to the runs using settings combin
 An example command line: 
 `python3 main.py --env_json jsonfiles/environment/Pendulum-v0.json --agent_json jsonfiles/agent/reverse_kl.json --index 0`
 
+OR to train multiple runs using the same parameter settings:
+`for i in $(seq 0 36 $(echo "36 * 10" | bc)); do python3 main.py --env_json jsonfiles/environment/Pendulum-v0.json --agent_json jsonfiles/agent/reverse_kl.json --index $i; done
+`
+
 **Run:** `python3 main.py --env_json jsonfiles/environment/$ENV.json --agent_json jsonfiles/agent/$AGENT.json --index $INDEX`
 
 

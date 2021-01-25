@@ -40,14 +40,14 @@ SETTING_NUM = int(sys.argv[5])
 
 
 #### Plot Settings #####
-# opt_range = range(1, 150+1) 
+# opt_range = range(1, 150+1)
 # xlimt = (1, 150)
 
 
 xmax = int(TOTAL_MIL_STEPS/EVAL_INTERVAL_MIL_STEPS)+1
 print('xmax', xmax)
 # xmax = 501
-opt_range = range(0, xmax) 
+opt_range = range(0, xmax)
 xlimt = (0, xmax-1)
 
 # ylimt = (-0.2, 1.8)
@@ -94,9 +94,9 @@ for i in range(NUM_RUNS):
     eval_rewards_arr = []
 
     # Filenames
-    eval_rewards_filename = DIR + '/' + ENV_NAME + '_' + AGENT_NAME + '_setting_' + str(SETTING_NUM) + '_run_' + str(i) + '_EvalEpisodeMeanRewardsLC.txt' 
-    #eval_action_filename = DIR + '/' + ENV_NAME + '_' + AGENT_NAME + '_setting_' + str(SETTING_NUM) + '_run_' + str(i) + '_EvalActionTaken.txt' 
-    #train_sigma_filename = DIR + '/' + ENV_NAME + '_' + AGENT_NAME + '_setting_' + str(SETTING_NUM) + '_run_' + str(i) + '_Sigma1.txt' 
+    eval_rewards_filename = DIR + '/' + ENV_NAME + '_' + AGENT_NAME + '_setting_' + str(SETTING_NUM) + '_run_' + str(i) + '_EvalEpisodeMeanRewardsLC.txt'
+    #eval_action_filename = DIR + '/' + ENV_NAME + '_' + AGENT_NAME + '_setting_' + str(SETTING_NUM) + '_run_' + str(i) + '_EvalActionTaken.txt'
+    #train_sigma_filename = DIR + '/' + ENV_NAME + '_' + AGENT_NAME + '_setting_' + str(SETTING_NUM) + '_run_' + str(i) + '_Sigma1.txt'
 
     eval_rewards_arr = np.loadtxt(eval_rewards_filename, delimiter=',')[:xmax]
     eval_rewards_arr = eval_rewards_arr
@@ -113,7 +113,7 @@ for i in range(NUM_RUNS):
     # print('run: {}'.format(i))
     # print(eval_rewards_arr)
     # input()
-
+print(eval_rewards_arr)
 
 
 eval_rewards_mean = np.mean(eval_rewards_total_arr, axis=0)[:xmax]
