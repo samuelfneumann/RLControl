@@ -66,6 +66,9 @@ class SoftActorCriticNetwork(BaseNetwork):
 
 
         # Op for periodically updating target network with online network weights
+        # Create an op (node) (using tf.group to group a number of operations into a single
+        # node) that assigns the weighted average between the target params and
+        # online params of the state value networks over each set of parameters in the NN
         self.update_target_net_params = tf.group([tf.assign(v_targ, (1 - self.tau) * v_targ + self.tau * v_main)
                                                   for v_main, v_targ in zip(self.get_vars('main'), self.get_vars('target'))])
 
@@ -97,8 +100,8 @@ class SoftActorCriticNetwork(BaseNetwork):
 
                 self.train_ops = [pi_loss, self.logp_pi, train_pi_op]
         else:
-
             with tf.control_dependencies(self.batchnorm_ops):
+                # Everything below only executes once self.batchnorm_ops executes
 
                 # Targets for Q and V regression
                 q_backup = tf.stop_gradient(self.r_ph + self.g_ph * self.v_targ)
@@ -279,6 +282,7 @@ class SoftActorCriticNetwork(BaseNetwork):
         log_std = self.LOG_STD_MIN + 0.5 * (self.LOG_STD_MAX - self.LOG_STD_MIN) * (log_std + 1)
         # log_std = tf.scalar_mul(1.0, log_std)
         std = tf.exp(log_std)
+        # X ~ Normal(mean, std_dev) <=> X ~ (mean + Normal(0, 1) * std_dev)
         pi = mu + tf.random_normal(tf.shape(mu)) * std
         logp_pi = self.gaussian_likelihood(pi, mu, log_std)
 
@@ -309,6 +313,9 @@ class SoftActorCriticNetwork(BaseNetwork):
         reward_batch = np.reshape(reward_batch, (batch_size, 1))
         gamma_batch = np.reshape(gamma_batch, (batch_size, 1))
 
+        # Session.run() will run the entire computaitonal graph to get every
+        # element in the self.train_ops, including any minimization steps if
+        # necessary
         return self.sess.run(self.train_ops, feed_dict={
             self.x_ph: state_batch,
             self.a_ph: action_batch,
@@ -317,6 +324,8 @@ class SoftActorCriticNetwork(BaseNetwork):
             self.g_ph: gamma_batch
         })
 
+
+    # THIS FUNCTION IS NEVER USED, AS self.true_q_pi_ph is None
     def update_network_true_q(self, state_batch, action_batch, next_state_batch, reward_batch, gamma_batch):
 
         # batch_size = np.shape(state_batch)[0]

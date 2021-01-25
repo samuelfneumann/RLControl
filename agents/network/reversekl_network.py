@@ -60,7 +60,8 @@ class ReverseKLNetwork(BaseNetwork):
         if self.action_dim == 1:
             self.N = config.N_param  # 1024
 
-            scheme = quadpy.line_segment.clenshaw_curtis(self.N)
+            # scheme = quadpy.line_segment.clenshaw_curtis(self.N)
+            scheme = quadpy.c1.clenshaw_curtis(self.N)
             # cut off endpoints since they should be zero but numerically might give nans
             # self.intgrl_actions = torch.tensor(scheme.points[1:-1], dtype=dtype).unsqueeze(-1) * self.action_max
             self.intgrl_actions = (torch.tensor(scheme.points[1:-1], dtype=dtype).unsqueeze(-1) * self.action_max).to(
@@ -152,20 +153,20 @@ class ReverseKLNetwork(BaseNetwork):
 
         # pi_loss
         if self.optim_type == 'll':
-            log_prob_target = new_q_val - v_val
+            log_prob_target = new_q_val - v_val  # v_val serves as baseline
 
             # loglikelihood update
             policy_loss = (-log_prob * (log_prob_target - self.entropy_scale * log_prob).detach()).mean()
 
         elif self.optim_type == 'hard_ll':
-            log_prob_target = new_q_val - v_val
+            log_prob_target = new_q_val - v_val  # v_val serves as baseline
             policy_loss = (-log_prob * (log_prob_target).detach()).mean()
 
         elif self.optim_type == 'reparam':
             # policy_loss = - (expected_new_q_val - self.entropy_scale * log_prob).mean()
             pass
 
-        elif self.optim_type == 'intg':
+        elif self.optim_type == 'intg':  # This is soft RKL from the FKL_RKL paper
             stacked_state_batch = state_batch.unsqueeze(1).repeat(1, self.intgrl_actions_len, 1).reshape(-1, self.state_dim)
 
             tiled_intgrl_actions = self.intgrl_actions.unsqueeze(0).repeat(self.config.batch_size, 1, 1)
@@ -182,7 +183,7 @@ class ReverseKLNetwork(BaseNetwork):
 
             policy_loss = (integrands * self.intgrl_weights.repeat(self.config.batch_size)).reshape(self.config.batch_size, -1).sum(-1).mean(-1)
 
-        elif self.optim_type == 'hard_intg':
+        elif self.optim_type == 'hard_intg':  # This is hard RKL from the FKL_RKL paper
             stacked_state_batch = state_batch.unsqueeze(1).repeat(1, self.intgrl_actions_len, 1).reshape(-1, self.state_dim)
             tiled_intgrl_actions = self.intgrl_actions.unsqueeze(0).repeat(self.config.batch_size, 1, 1)
             stacked_intgrl_actions = tiled_intgrl_actions.reshape(-1, self.action_dim)  # (32 x 254, 1)
@@ -210,6 +211,7 @@ class ReverseKLNetwork(BaseNetwork):
         self.pi_optimizer.step()
 
     def update_target_network(self):
+        # target_v_net is just a recency weighted average of the v parameters
         for target_param, param in zip(self.target_v_net.parameters(), self.v_net.parameters()):
             target_param.data.copy_(
                 target_param.data * (1.0 - self.tau) + param.data * self.tau
@@ -301,11 +303,14 @@ class PolicyNetwork(nn.Module):
         return mean, log_std
 
     def evaluate(self, state, epsilon=1e-6):
+        # Get the parameters for the normal distribution
         mean, log_std = self.forward(state)
         std = log_std.exp()
 
+        # Get the distribution by which actions are parameterized
         normal = self.get_distribution(mean, std)
 
+        # Sample an action and ensure it is within the correct range
         z = normal.sample()
         action = torch.tanh(z)
         log_prob = normal.log_prob(z)

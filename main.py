@@ -57,11 +57,13 @@ def main():
 
     from utils.main_utils import get_sweep_parameters, create_agent
     agent_params, total_num_sweeps = get_sweep_parameters(agent_json['sweeps'], args.index)
-    print('Agent setting: ', agent_params)
 
     # get run idx and setting idx
     RUN_NUM = int(args.index / total_num_sweeps)
     SETTING_NUM = args.index % total_num_sweeps
+    print(f"SETTING_NUM: {SETTING_NUM}")
+    print(f"RUN_NUM: {RUN_NUM}")
+    print('Agent setting: ', agent_params)
 
     # set Random Seed (for training)
     RANDOM_SEED = RUN_NUM

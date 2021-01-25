@@ -32,7 +32,28 @@ ENV=Pendulum-v0 (must match jsonfiles/environment/*.json name)
 AGENT=ddpg (must match jsonfiles/agent/*.json name)
 
 INDEX=0 (useful for running sweeps over different settings and doing multiple runs)
+INDEX is the index into the settings and run to use. The agent JSON file defines
+the number of settings. Each specific combination of variables in the JSON file
+represents the settings number. For example, if we had two learning rates and
+we wanted to perform sweeps over them, then in the agent JSON file
+we would have `lr1: [0.01, 0.001]` and `lr2: [0.1, 0.01]`. Then:
+```
+INDEX=0 <==> run 1 of lr1 = 0.01 lr2 = 0.1
+INDEX=1 <==> run 1 of lr1 = 0.01 lr2 = 0.01
+INDEX=2 <==> run 1 of lr1 = 0.001 lr2 = 0.1
+INDEX=3 <==> run 1 of lr1 = 0.001 lr 0.01
+```
+and the indices would wrap around for additional runs, that is:
+```
+INDEX=4 <==> run 2 of lr1 = 0.01 lr2 = 0.1
+INDEX=5 <==> run 2 of lr1 = 0.01 lr2 = 0.01
+INDEX=6 <==> run 2 of lr1 = 0.001 lr2 = 0.1
+INDEX=7 <==> run 2 of lr1 = 0.001 lr 0.01
+```
+etc... That is, INDEX=i mod (#settings) refers to the runs using settings combination i
 
+An example command line: 
+`python3 main.py --env_json jsonfiles/environment/Pendulum-v0.json --agent_json jsonfiles/agent/reverse_kl.json --index 0`
 
 **Run:** `python3 main.py --env_json jsonfiles/environment/$ENV.json --agent_json jsonfiles/agent/$AGENT.json --index $INDEX`
 
