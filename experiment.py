@@ -73,6 +73,10 @@ class Experiment(object):
 
             episode_count += 1
 
+            # Save parameters
+            # if episode_count % k == 0:
+            #   save
+
         self.train_environment.close()  # clear environment memory
 
         end_run = datetime.now()
