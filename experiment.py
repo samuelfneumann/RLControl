@@ -7,7 +7,7 @@ output_ep_result_fq = 1  # print to console (not saved output) after this many e
 save_maxQ_fq = -1  # plot cost-to-go after this many episodes
 plot_maxA_fq = -1  # plot maxA after this many episodes
 
-        
+
 class Experiment(object):
     def __init__(self, agent, train_environment, test_environment, seed, writer, write_log, write_plot):
         self.agent = agent
@@ -46,7 +46,7 @@ class Experiment(object):
 
         # evaluate once at beginning
         self.cum_eval_time += self.eval()
-        
+
         while self.total_step_count < self.train_environment.TOTAL_STEPS_LIMIT:
             # runs a single episode and returns the accumulated reward for that episode
             train_start_time = time.time()
@@ -58,16 +58,16 @@ class Experiment(object):
             self.cum_train_time += train_ep_time
             print("Train:: ep: " + str(episode_count) + ", r: " + str(episode_reward) + ", n_steps: " + str(num_steps) + ", elapsed: " + time.strftime("%H:%M:%S", time.gmtime(train_ep_time)))
 
-            if not force_terminated: 
+            if not force_terminated:
                 self.train_rewards_per_episode.append(episode_reward)
                 self.train_cum_steps.append(self.total_step_count)
 
             # write tf summary
             if not self.total_step_count == self.train_environment.TOTAL_STEPS_LIMIT:
-                
+
                 if self.write_log:
                     write_summary(self.writer, episode_count, episode_reward, "train/episode_reward")
-        
+
             episode_count += 1
 
         self.train_environment.close()  # clear environment memory
@@ -160,6 +160,7 @@ class Experiment(object):
 
         mean = np.mean(temp_rewards_per_episode)
 
+        print(temp_rewards_per_episode)
         self.eval_mean_rewards_per_episode.append(mean)
         self.eval_std_rewards_per_episode.append(np.std(temp_rewards_per_episode))
 
@@ -181,11 +182,11 @@ class Experiment(object):
 
         episode_step_count = 0
         while not (done or episode_step_count == test_env.EPISODE_STEPS_LIMIT):
-            
+
             obs_n, reward, done, info = test_env.step(Aold)
 
-            episode_reward += reward  
-            if not done:          
+            episode_reward += reward
+            if not done:
                 Aold = self.agent.step(obs_n, is_train)
 
             obs = obs_n
@@ -196,7 +197,7 @@ class Experiment(object):
 
 # write to tf Summary
 def write_summary(writer, increment, stuff_to_log, tag):
-    summary = tf.Summary() 
+    summary = tf.Summary()
     summary.value.add(simple_value=stuff_to_log, tag=tag)
     writer.add_summary(summary, increment)
     writer.flush()

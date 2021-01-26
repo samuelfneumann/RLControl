@@ -15,9 +15,18 @@ import itertools
 from scipy.special import binom
 
 
+# Select the device to use
+DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
+if not torch.cuda.is_available():
+    print("using cpu")
+else:
+    print("using cuda:0")
+
+
 class ReverseKLNetwork(BaseNetwork):
     def __init__(self, sess, input_norm, config):
         super(ReverseKLNetwork, self).__init__(sess, config, [config.pi_lr, config.qf_vf_lr])
+        self.device = torch.device(DEVICE)
 
         self.config = config
 
@@ -38,17 +47,16 @@ class ReverseKLNetwork(BaseNetwork):
         self.entropy_scale = config.entropy_scale
 
         # create network
-        self.pi_net = PolicyNetwork(self.state_dim, self.action_dim, config.actor_l1_dim, config.actor_l2_dim, self.action_max[0])
-        self.q_net = SoftQNetwork(self.state_dim, self.action_dim, config.critic_l1_dim, config.critic_l2_dim)
+        self.pi_net = PolicyNetwork(self.state_dim, self.action_dim, config.actor_l1_dim, config.actor_l2_dim, self.action_max[0]).to(self.device)
+        self.q_net = SoftQNetwork(self.state_dim, self.action_dim, config.critic_l1_dim, config.critic_l2_dim).to(self.device)
 
-        self.v_net = ValueNetwork(self.state_dim, config.critic_l1_dim, config.critic_l2_dim)
-        self.target_v_net = ValueNetwork(self.state_dim, config.critic_l1_dim, config.critic_l2_dim)
+        self.v_net = ValueNetwork(self.state_dim, config.critic_l1_dim, config.critic_l2_dim).to(self.device)
+        self.target_v_net = ValueNetwork(self.state_dim, config.critic_l1_dim, config.critic_l2_dim).to(self.device)
 
         # copy to target_v_net
         for target_param, param in zip(self.target_v_net.parameters(), self.v_net.parameters()):
             target_param.data.copy_(param.data)
 
-        self.device = torch.device("cpu")
 
         # optimizer
         self.pi_optimizer = optim.Adam(self.pi_net.parameters(), lr=self.learning_rate[0])
@@ -65,8 +73,8 @@ class ReverseKLNetwork(BaseNetwork):
             # cut off endpoints since they should be zero but numerically might give nans
             # self.intgrl_actions = torch.tensor(scheme.points[1:-1], dtype=dtype).unsqueeze(-1) * self.action_max
             self.intgrl_actions = (torch.tensor(scheme.points[1:-1], dtype=dtype).unsqueeze(-1) * self.action_max).to(
-                torch.float32)
-            self.intgrl_weights = torch.tensor(scheme.weights[1:-1], dtype=dtype)
+                torch.float32).to(self.device)
+            self.intgrl_weights = torch.tensor(scheme.weights[1:-1], dtype=dtype, device=self.device)
 
             self.intgrl_actions_len = np.shape(self.intgrl_actions)[0]
 
@@ -94,11 +102,12 @@ class ReverseKLNetwork(BaseNetwork):
 
                 for j in itertools.product(*[range(len(points[ki])) for ki in k]):
                     self.intgrl_actions.append(
-                        torch.tensor([points[k[i]][j[i]] for i in range(self.action_dim)], dtype=dtype))
+                        torch.tensor([points[k[i]][j[i]] for i in range(self.action_dim)], dtype=dtype, device=self.device))
                     self.intgrl_weights.append(
                         coeff * np.prod([weights[k[i]][j[i]].squeeze() for i in range(self.action_dim)]))
-            self.intgrl_weights = torch.tensor(self.intgrl_weights, dtype=dtype)
-            self.intgrl_actions = torch.stack(self.intgrl_actions) * self.action_max
+            self.intgrl_weights = torch.tensor(self.intgrl_weights, dtype=dtype, device=self.device)
+            self.intgrl_actions = (torch.stack(self.intgrl_actions) * self.action_max)
+            self.intgrl_actions = self.intgrl_actions.to(self.device)
 
             self.intgrl_actions_len = np.shape(self.intgrl_actions)[0]
 
@@ -109,7 +118,7 @@ class ReverseKLNetwork(BaseNetwork):
         action, log_prob, z, mean, log_std = self.pi_net.evaluate(state_batch)
 
         # print("sample action: {}".format(action.detach().numpy()))
-        return action.detach().numpy()
+        return action.cpu().detach().numpy()
 
     def predict_action(self, state_batch):
 
@@ -119,7 +128,7 @@ class ReverseKLNetwork(BaseNetwork):
         _, _, _, mean, log_std = self.pi_net.evaluate(state_batch)
         # print("predict action: {}".format(mean.detach().numpy()))
 
-        return mean.detach().numpy()
+        return mean.cpu().detach().numpy()
 
     def update_network(self, state_batch, action_batch, next_state_batch, reward_batch, gamma_batch):
 
@@ -232,6 +241,7 @@ class ReverseKLNetwork(BaseNetwork):
 class ValueNetwork(nn.Module):
     def __init__(self, state_dim, l1_dim, l2_dim, init_w=3e-3):
         super(ValueNetwork, self).__init__()
+        self.device = torch.device(DEVICE)
 
         self.linear1 = nn.Linear(state_dim, l1_dim)
         self.linear2 = nn.Linear(l1_dim, l2_dim)
@@ -240,9 +250,9 @@ class ValueNetwork(nn.Module):
         self.linear3.weight.data.uniform_(-init_w, init_w)
         self.linear3.bias.data.uniform_(-init_w, init_w)
 
-        self.device = torch.device("cpu")
-
     def forward(self, state):
+        # if state.device != self.device:
+        #     state.to(self.device)
         x = F.relu(self.linear1(state))
         x = F.relu(self.linear2(x))
         x = self.linear3(x)
@@ -252,6 +262,7 @@ class ValueNetwork(nn.Module):
 class SoftQNetwork(nn.Module):
     def __init__(self, state_dim, action_dim, l1_dim, l2_dim, init_w=3e-3):
         super(SoftQNetwork, self).__init__()
+        self.device = torch.device(DEVICE)
 
         self.linear1 = nn.Linear(state_dim + action_dim, l1_dim)
         self.linear2 = nn.Linear(l1_dim, l2_dim)
@@ -260,9 +271,13 @@ class SoftQNetwork(nn.Module):
         self.linear3.weight.data.uniform_(-init_w, init_w)
         self.linear3.bias.data.uniform_(-init_w, init_w)
 
-        self.device = torch.device("cpu")
 
     def forward(self, state, action):
+        # if action.device != self.device:
+        #     action = action.to(self.device)
+        # if state.device != self.device:
+        #     state = state.to(self.device)
+
         x = torch.cat([state, action], 1)
         x = F.relu(self.linear1(x))
         x = F.relu(self.linear2(x))
@@ -273,6 +288,7 @@ class SoftQNetwork(nn.Module):
 class PolicyNetwork(nn.Module):
     def __init__(self, state_dim, action_dim, l1_dim, l2_dim, action_scale, init_w=3e-3, log_std_min=-20, log_std_max=2):
         super(PolicyNetwork, self).__init__()
+        self.device = torch.device(DEVICE)
 
         self.log_std_min = log_std_min
         self.log_std_max = log_std_max
@@ -290,9 +306,11 @@ class PolicyNetwork(nn.Module):
 
         self.action_dim = action_dim
         self.action_scale = action_scale
-        self.device = torch.device("cpu")
 
     def forward(self, state):
+        # if state.device != self.device:
+        #     state = state.to(self.device)
+
         x = F.relu(self.linear1(state))
         x = F.relu(self.linear2(x))
 
