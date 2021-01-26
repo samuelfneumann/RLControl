@@ -3,6 +3,9 @@ from datetime import datetime
 import time
 import tensorflow as tf
 
+# TODO:
+#   Store all data, not just mean
+
 output_ep_result_fq = 1  # print to console (not saved output) after this many episodes
 save_maxQ_fq = -1  # plot cost-to-go after this many episodes
 plot_maxA_fq = -1  # plot maxA after this many episodes

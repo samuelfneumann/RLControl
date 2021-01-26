@@ -32,6 +32,8 @@ increment=$4
 end_idx=$5
 for i in $(seq ${start_idx} ${increment} ${end_idx})
 do
-   echo Running..$i
-   python3 main.py --env_json jsonfiles/environment/"$ENV_NAME".json --agent_json jsonfiles/agent/"$AGENT_NAME".json --index "$i" # --write_plot
+	echo "====================================================="
+	echo -e "\nRunning Experiment: $i\n"
+	echo "====================================================="
+	python3 main.py --env_json jsonfiles/environment/"$ENV_NAME".json --agent_json jsonfiles/agent/"$AGENT_NAME".json --index "$i" # --write_plot
 done
