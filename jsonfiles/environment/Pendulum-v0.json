@@ -1,9 +1,9 @@
 {
     "environment": "Pendulum-v0",
 
-    "TotalMilSteps": 0.001,
+    "TotalMilSteps": 0.01,
     "EpisodeSteps": -1,
 
-    "EvalIntervalMilSteps": 0.0001,
-    "EvalEpisodes": 1
+    "EvalIntervalMilSteps": 0.0005,
+    "EvalEpisodes": 5
 }
