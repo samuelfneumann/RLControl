@@ -176,7 +176,7 @@ def main():
         data["experiment_data"][sweep]["runs"].append(run_data)
 
         save_file = save_dir + env_json['environment'] + '_' + \
-            agent_json['agent'] + f"_data_{args.indices[0]}_{args.indices[1]}_{args.indices[2]}"
+            agent_json['agent'] + f"_data_{args.indices[0]}_{args.indices[1]}_{args.indices[2]}.pkl"
         with open(save_file, "wb") as out_file:
             pickle.dump(data, out_file)
             print(data)
