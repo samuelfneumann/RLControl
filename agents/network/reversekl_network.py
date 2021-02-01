@@ -18,10 +18,6 @@ from scipy.special import binom
 # Select the device to use
 # DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 DEVICE = "cpu"
-if not torch.cuda.is_available():
-    print("using cpu")
-else:
-    print("using cuda:0")
 
 
 class ReverseKLNetwork(BaseNetwork):
