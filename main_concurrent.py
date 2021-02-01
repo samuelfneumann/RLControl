@@ -19,9 +19,12 @@ NUM_PROCESSES = 4
 @click.command()
 # @click.option("--indices", nargs=3, help="Settings indices to run: start step stop", type=int)
 @click.option("--runs", type=int, required=True)
-@click.option("--env_name", help="Environment name for experiment", type=str, required=True)
-@click.option("--agent_name", help="Filename (no extension) for json file of agent to run for experiment", type=str, required=True)
-@click.option("--num_processes", default=NUM_PROCESSES, help="The max number of concurrent processes")
+@click.option("--env_name", help="Environment name for experiment",
+              type=str, required=True)
+@click.option("--agent_name", help="Filename (no extension) for json file " +
+              "of agent to run for experiment", type=str, required=True)
+@click.option("--num_processes", default=NUM_PROCESSES,
+              help="The max number of concurrent processes")
 def run(env_name, agent_name, num_processes, runs):
     """
     Runs concurrent or serial experiments
