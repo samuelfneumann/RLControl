@@ -65,7 +65,7 @@ def run(env_name, agent_name, num_processes, runs):
                 p.starmap(run_experiment, args)
 
         # Combine data files
-        combine_data_dictionaries(f"results/{env_name}results")
+        combine_data_dictionaries(f"results/{env_name}_{agent_name}results")
     else:
         # Sequential runs
         run_experiment(env_file, agent_file, 0, 1, total_num_sweeps * runs)

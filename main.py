@@ -126,13 +126,16 @@ def main():
         print('Agent setting: ', agent_params)
 
         # create save directory
-        save_dir = './results/' + env_json['environment'] + 'results/'
+        save_dir = './results/' + env_json['environment'] + "_" + \
+            agent_json["agent"] + 'results/'
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
         # create log directory (for tensorboard, gym monitor/render)
         START_DATETIME = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-        log_dir = './results/{}results/log_summary/{}/{}_{}_{}'.format(str(env_json['environment']), str(agent_json['agent']), str(SETTING_NUM), str(RUN_NUM), str(START_DATETIME))
+        env_name = env_json["environment"]
+        agent_name = agent_json["agent"]
+        log_dir = './results/{}_{}results/log_summary/{}/{}_{}_{}'.format(str(env_json['environment']), str(agent_json['agent']), str(agent_json['agent']), str(SETTING_NUM), str(RUN_NUM), str(START_DATETIME))
 
         # tf 1.8
         #writer = tf.summary.create_file_writer(log_dir)
