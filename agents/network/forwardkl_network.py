@@ -60,7 +60,8 @@ class ForwardKLNetwork(BaseNetwork):
         if self.action_dim == 1:
             self.N = config.N_param  # 1024
 
-            scheme = quadpy.line_segment.clenshaw_curtis(self.N)
+            # scheme = quadpy.line_segment.clenshaw_curtis(self.N)
+            scheme = quadpy.c1.clenshaw_curtis(self.N)
             # cut off endpoints since they should be zero but numerically might give nans
             # self.intgrl_actions = torch.tensor(scheme.points[1:-1], dtype=dtype).unsqueeze(-1) * self.action_max
             self.intgrl_actions = (torch.tensor(scheme.points[1:-1], dtype=dtype).unsqueeze(-1) * self.action_max).to(
