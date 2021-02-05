@@ -23,8 +23,13 @@ class Experiment(object):
 
         self.train_rewards_per_episode = []
         self.train_cum_steps = []
-        self.eval_mean_rewards_per_episode = []
-        self.eval_std_rewards_per_episode = []
+        # self.eval_mean_rewards_per_episode = []
+        # self.eval_std_rewards_per_episode = []
+        self.train_episodes = 0
+        self.timesteps_at_eval = []
+        self.train_steps_per_episode = []
+        self.eval_steps_per_episode = []
+        self.eval_rewards_per_episode = []
 
         self.total_step_count = 0
         self.writer = writer
@@ -39,6 +44,7 @@ class Experiment(object):
         self.cum_train_time = 0.0
         self.cum_eval_time = 0.0
 
+
     def run(self):
 
         episode_count = 0
@@ -49,6 +55,7 @@ class Experiment(object):
 
         # evaluate once at beginning
         self.cum_eval_time += self.eval()
+        self.timesteps_at_eval.append(self.total_step_count)
 
         while self.total_step_count < self.train_environment.TOTAL_STEPS_LIMIT:
             # runs a single episode and returns the accumulated reward for that episode
@@ -64,6 +71,7 @@ class Experiment(object):
             if not force_terminated:
                 self.train_rewards_per_episode.append(episode_reward)
                 self.train_cum_steps.append(self.total_step_count)
+                self.train_steps_per_episode.append(num_steps)
 
             # write tf summary
             if not self.total_step_count == self.train_environment.TOTAL_STEPS_LIMIT:
@@ -85,11 +93,13 @@ class Experiment(object):
         print("Training Time: " + time.strftime("%H:%M:%S", time.gmtime(self.cum_train_time)))
         print("Evaluation Time: " + time.strftime("%H:%M:%S", time.gmtime(self.cum_eval_time)))
 
-        return self.train_rewards_per_episode, self.eval_mean_rewards_per_episode, self.eval_std_rewards_per_episode, self.train_cum_steps
+        return self.train_rewards_per_episode, self.eval_rewards_per_episode, \
+            self.train_steps_per_episode, self.eval_steps_per_episode, \
+            self.timesteps_at_eval, self.cum_train_time, self.cum_eval_time, self.train_episodes, self.train_cum_steps
 
     # Runs a single episode (TRAIN)
     def run_episode_train(self, is_train):
-
+        self.train_episodes += 1
         eval_session_time = 0.0
 
         obs = self.train_environment.reset()
@@ -127,6 +137,7 @@ class Experiment(object):
             obs = obs_n
 
             if self.total_step_count % self.train_environment.eval_interval == 0:
+                self.timesteps_at_eval.append(self.total_step_count)
                 eval_session_time += self.eval()
 
         # self.agent.network_manager.logger.store(EpRet=episode_reward, EpLen=episode_step_count)
@@ -153,11 +164,13 @@ class Experiment(object):
         temp_rewards_per_episode = []
 
         eval_session_time = 0.0
+        episode_steps = []
 
         for i in range(self.test_environment.eval_episodes):
             eval_start_time = time.time()
             episode_reward, num_steps = self.run_episode_eval(self.test_environment, is_train=False)
             eval_end_time = time.time()
+            episode_steps.append(num_steps)
             temp_rewards_per_episode.append(episode_reward)
 
             eval_elapsed_time = eval_end_time - eval_start_time
@@ -165,14 +178,16 @@ class Experiment(object):
             eval_session_time += eval_elapsed_time
             print("=== EVAL :: ep: " + str(i) + ", r: " + str(episode_reward) + ", n_steps: " + str(num_steps) + ", elapsed: " + time.strftime("%H:%M:%S", time.gmtime(eval_elapsed_time)))
 
-        mean = np.mean(temp_rewards_per_episode)
+        # mean = np.mean(temp_rewards_per_episode)
+        self.eval_rewards_per_episode.append(temp_rewards_per_episode)
+        self.eval_steps_per_episode.append(episode_steps)
 
-        print(temp_rewards_per_episode)
-        self.eval_mean_rewards_per_episode.append(mean)
-        self.eval_std_rewards_per_episode.append(np.std(temp_rewards_per_episode))
+        # print(temp_rewards_per_episode)
+        # self.eval_mean_rewards_per_episode.append(mean)
+        # self.eval_std_rewards_per_episode.append(np.std(temp_rewards_per_episode))
 
-        if self.write_log:
-            write_summary(self.writer, self.total_step_count, mean, "eval/episode_reward/no_noise")
+        # if self.write_log:
+        #     write_summary(self.writer, self.total_step_count, mean, "eval/episode_reward/no_noise")
 
         self.cum_eval_time += eval_session_time
 

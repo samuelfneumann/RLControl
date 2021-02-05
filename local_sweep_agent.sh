@@ -35,5 +35,5 @@ do
 	echo "====================================================="
 	echo -e "\nRunning Experiment: $i\n"
 	echo "====================================================="
-	python3 main.py --env_json jsonfiles/environment/"$ENV_NAME".json --agent_json jsonfiles/agent/"$AGENT_NAME".json --index "$i" # --write_plot
+	python3 main.py --env_json jsonfiles/environment/"$ENV_NAME".json --agent_json jsonfiles/agent/"$AGENT_NAME".json --indices "$start_idx" "$increment" "$end_idx" # --write_plot
 done

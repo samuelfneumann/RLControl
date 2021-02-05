@@ -77,11 +77,11 @@ def main():
     data["experiment"]["environment"] = {}
     data["experiment"]["agent"] = {}
     data["experiment"]["agent"]["agent_name"] = agent_json["agent"]
-    data["experiment"]["agent"]["hyperparams"] = dict(agent_json["sweeps"])
+    data["experiment"]["agent"]["parameters"] = dict(agent_json["sweeps"])
     data["experiment"]["environment"]["env_name"] = env_json["environment"]
-    data["experiment"]["environment"]["total_million_steps_train"] = env_json["TotalMilSteps"]
-    data["experiment"]["environment"]["episode_steps"] = env_json["EpisodeSteps"]
-    data["experiment"]["environment"]["eval_interval_million_steps"] = env_json["EvalIntervalMilSteps"]
+    data["experiment"]["environment"]["total_timesteps"] = env_json["TotalMilSteps"] * 1000000
+    data["experiment"]["environment"]["steps_per_episode"] = env_json["EpisodeSteps"]
+    data["experiment"]["environment"]["eval_interval_timesteps"] = env_json["EvalIntervalMilSteps"] * 1000000
     data["experiment"]["environment"]["eval_episodes"] = env_json["EvalEpisodes"]
 
     # Experiment runs per each hyperparameter
@@ -168,13 +168,25 @@ def main():
                                 writer=writer, write_log=args.write_log, write_plot=args.write_plot)
 
         # run experiment
-        episode_rewards, eval_episode_mean_rewards, eval_episode_std_rewards, train_episode_steps = experiment.run()
+        episode_rewards, eval_episode_rewards, train_episode_steps, \
+            eval_episode_steps, timesteps_at_eval, train_time, eval_time, \
+            train_ep, _ = experiment.run()
 
         # Save data
-        run_data["eval_episode_std_rewards"] = np.array(eval_episode_std_rewards)
-        run_data["eval_episode_mean_rewards"] = np.array(eval_episode_mean_rewards)
-        run_data["episode_steps"] = np.array(train_episode_steps)
-        run_data["online_episode_rewards"] = np.array(episode_rewards)
+        run_data["total_timesteps"] = env_json["TotalMilSteps"] * 1000000
+        run_data["eval_interval_timesteps"] = env_json["EvalIntervalMilSteps"] * 1000000
+        run_data["episodes_per_eval"] = env_json["EvalEpisodes"]
+
+        # run_data["eval_episode_std_rewards"] = np.array(eval_episode_std_rewards)
+        # run_data["eval_episode_mean_rewards"] = np.array(eval_episode_mean_rewards)
+        run_data["eval_episode_rewards"] = np.array(eval_episode_rewards)
+        run_data["eval_episode_steps"] = np.array(eval_episode_steps)
+        run_data["timesteps_at_eval"] = np.array(timesteps_at_eval)
+        run_data["train_episode_steps"] = np.array(train_episode_steps)
+        run_data["train_episode_rewards"] = np.array(episode_rewards)
+        run_data["total_train_episodes"] = train_ep
+        run_data["eval_time"] = train_time
+        run_data["train_time"] = eval_time
 
         data["experiment_data"][sweep]["runs"].append(run_data)
 
