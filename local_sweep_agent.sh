@@ -30,10 +30,11 @@ source /home/samuel/Documents/Actor-Expert/actor_expert_env/bin/activate
 start_idx=$3
 increment=$4
 end_idx=$5
+save_dir=$6
 for i in $(seq ${start_idx} ${increment} ${end_idx})
 do
 	echo "====================================================="
 	echo -e "\nRunning Experiment: $i\n"
 	echo "====================================================="
-	python3 main.py --env_json jsonfiles/environment/"$ENV_NAME".json --agent_json jsonfiles/agent/"$AGENT_NAME".json --indices "$start_idx" "$increment" "$end_idx" # --write_plot
+	python3 main.py --env_json jsonfiles/environment/"$ENV_NAME".json --agent_json jsonfiles/agent/"$AGENT_NAME".json --indices "$start_idx" "$increment" "$end_idx" --save_dir "$save_dir" # --write_plot
 done

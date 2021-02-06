@@ -38,6 +38,7 @@ def main():
     parser.add_argument('--render', default=False, action='store_true')
     parser.add_argument('--write_log', default=False, action='store_true')
     parser.add_argument('--write_plot', default=False, action='store_true')
+    parser.add_argument('--save_dir', default="./results")
 
     args = parser.parse_args()
 
@@ -126,7 +127,7 @@ def main():
         print('Agent setting: ', agent_params)
 
         # create save directory
-        save_dir = './results/' + env_json['environment'] + "_" + \
+        save_dir = args.save_dir + "/" + env_json['environment'] + "_" + \
             agent_json["agent"] + 'results/'
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
