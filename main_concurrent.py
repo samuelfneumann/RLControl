@@ -66,8 +66,9 @@ def run(env_name, agent_name, num_processes, runs, save_dir):
                 p.starmap(run_experiment, args)
 
         # Combine data files
-        combine_data_dictionaries(f"results/{env_name}_{agent_name}results",
-                                  save_dir)
+        agent_name = agent_json["agent"]
+        data_path=os.path.join(save_dir, f"{env_name}_{agent_name}results")
+        combine_data_dictionaries(data_path)
     else:
         # Sequential runs
         run_experiment(env_file, agent_file, 0, 1, total_num_sweeps * runs,
@@ -97,7 +98,7 @@ def run_experiment(env_file, agent_file, start, step, stop, save_dir):
                     str(step), str(stop), "--save_dir", save_dir])
 
 
-def combine_data_dictionaries(dir, save_dir):
+def combine_data_dictionaries(dir):
     """
     Combines the many data dictionaries created during the concurrent
     training procedure into a single data dictionary. The combined data is
@@ -141,9 +142,7 @@ def combine_data_dictionaries(dir, save_dir):
                 # Add data to dictionary
                 data["experiment_data"][key] = in_data["experiment_data"][key]
 
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-    with open(os.path.join(save_dir, "data.pkl"), "wb") as out_file:
+    with open(os.path.join(dir, "data.pkl"), "wb") as out_file:
         pickle.dump(data, out_file)
 
     return data
