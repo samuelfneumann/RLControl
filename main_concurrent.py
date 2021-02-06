@@ -14,7 +14,7 @@ from utils.main_utils import get_sweep_parameters
 #   Read in the json files once and pass to subprocesses
 
 
-NUM_PROCESSES = 4
+NUM_PROCESSES = 1
 
 @click.command()
 # @click.option("--indices", nargs=3, help="Settings indices to run: start step stop", type=int)
@@ -25,7 +25,8 @@ NUM_PROCESSES = 4
               "of agent to run for experiment", type=str, required=True)
 @click.option("--num_processes", default=NUM_PROCESSES,
               help="The max number of concurrent processes")
-def run(env_name, agent_name, num_processes, runs):
+@click.option("--save_dir", default="./results")
+def run(env_name, agent_name, num_processes, runs, save_dir):
     """
     Runs concurrent or serial experiments
 
@@ -58,20 +59,23 @@ def run(env_name, agent_name, num_processes, runs):
         args = []
         for i in range(total_num_sweeps):
             arg = (env_file, agent_file, i, total_num_sweeps,
-                   total_num_sweeps * runs)
+                   total_num_sweeps * runs, save_dir)
             args.append(arg)
 
         with multiprocessing.Pool(num_processes) as p:
                 p.starmap(run_experiment, args)
 
         # Combine data files
-        combine_data_dictionaries(f"results/{env_name}_{agent_name}results")
+        combine_data_dictionaries(f"results/{env_name}_{agent_name}results",
+                                  save_dir)
     else:
         # Sequential runs
-        run_experiment(env_file, agent_file, 0, 1, total_num_sweeps * runs)
+        run_experiment(env_file, agent_file, 0, 1, total_num_sweeps * runs,
+                       save_dir)
 
 
-def run_experiment(env_file, agent_file, start, step, stop):
+
+def run_experiment(env_file, agent_file, start, step, stop, save_dir):
     """
     Runs a single experiment
 
@@ -90,10 +94,10 @@ def run_experiment(env_file, agent_file, start, step, stop):
     """
     subprocess.run(["python3", "main.py", "--env_json", env_file,
                     "--agent_json", agent_file, "--indices", str(start),
-                    str(step), str(stop)])
+                    str(step), str(stop), "--save_dir", save_dir])
 
 
-def combine_data_dictionaries(dir):
+def combine_data_dictionaries(dir, save_dir):
     """
     Combines the many data dictionaries created during the concurrent
     training procedure into a single data dictionary. The combined data is
@@ -137,7 +141,9 @@ def combine_data_dictionaries(dir):
                 # Add data to dictionary
                 data["experiment_data"][key] = in_data["experiment_data"][key]
 
-    with open(os.path.join(dir, "data.pkl"), "wb") as out_file:
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    with open(os.path.join(save_dir, "data.pkl"), "wb") as out_file:
         pickle.dump(data, out_file)
 
     return data
