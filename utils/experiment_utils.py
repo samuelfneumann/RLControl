@@ -4,49 +4,6 @@
 import numpy as np
 
 
-def create_agent(agent, config):
-    """
-    Creates an agent given the agent name and configuration dictionary
-
-    Parameters
-    ----------
-    agent : str
-        The name of the agent, one of 'linearAC' or 'SAC'
-    config : dict
-        The agent configuration dictionary
-
-    Returns
-    -------
-    baseAgent.BaseAgent
-        The agent to train
-    """
-    if agent.lower() == "lineargaussianactorcritic" or \
-       agent.lower() == "linearac":
-        from linearAC import LinearAC
-        return LinearAC(config["decay"], config["actor_lr"],
-                        config["critic_lr"], config["avg_reward_lr"],
-                        config["feature_size"], config["gamma"],
-                        config["accumulate_trace"], config["scaled"],
-                        clip_stddev=config["clip_stddev"],
-                        seed=config["seed"])
-
-    if agent.lower() == "sac":
-        from sac import SAC
-        return SAC(num_inputs=config["feature_size"],
-                   action_space=config["action_space"],
-                   gamma=config["gamma"], tau=config["tau"],
-                   alpha=config["alpha"], policy=config["policy_type"],
-                   target_update_interval=config["target_update_interval"],
-                   critic_lr=config["critic_lr"], actor_lr=config["actor_lr"],
-                   alpha_lr=config["alpha_lr"],
-                   actor_hidden_dim=config["actor_hidden_dim"],
-                   critic_hidden_dim=config["critic_hidden_dim"],
-                   replay_capacity=config["replay_capacity"],
-                   seed=config["seed"], batch_size=config["batch_size"],
-                   automatic_entropy_tuning=config["automatic_entropy_tuning"],
-                   cuda=config["cuda"], clip_stddev=config["clip_stddev"])
-
-
 def get_sweep_parameters(parameters, env_config, index):
     """
     Gets the parameters for the hyperparameter sweep defined by the index.
@@ -80,7 +37,6 @@ def get_sweep_parameters(parameters, env_config, index):
         index)
     """
     out_params = {}
-    out_params["gamma"] = env_config["gamma"]
     accum = 1
     for key in parameters:
         num = len(parameters[key])
