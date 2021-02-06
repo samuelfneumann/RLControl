@@ -1,4 +1,5 @@
 results/
+tmp
 **/*.pyc
 **/.DS_Store
 .idea/**
