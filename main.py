@@ -47,6 +47,11 @@ def main():
         "write_plot": args.write_plot
     }
 
+    # Get name of env and agent for save directory so it is consistent with
+    # command line arguments
+    env_name = args.env_json
+    agent_name = args.agent_json
+
     # read env/agent json
     with open(args.env_json, 'r') as env_dat:
         env_json = json.load(env_dat, object_pairs_hook=OrderedDict)
@@ -127,8 +132,8 @@ def main():
         print('Agent setting: ', agent_params)
 
         # create save directory
-        save_dir = args.save_dir + "/" + env_json['environment'] + "_" + \
-            agent_json["agent"] + 'results/'
+        save_dir = args.save_dir + "/" + env_name + "_" + \
+            agent_name + 'results/'
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
