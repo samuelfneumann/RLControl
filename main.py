@@ -133,13 +133,10 @@ def main():
         print('Agent setting: ', agent_params)
 
         # create save directory
-        print(f"ARGS SAVE DIR: {args.save_dir}")
         save_dir = args.save_dir + "/" + env_name + "_" + \
             agent_name + 'results/'
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
-
-        print(f"SAVE DIR: {save_dir}")
 
         # create log directory (for tensorboard, gym monitor/render)
         START_DATETIME = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
@@ -202,7 +199,6 @@ def main():
 
         save_file = save_dir + f"_data_{args.indices[0]}_{args.indices[1]}_{args.indices[2]}.pkl"
         with open(save_file, "wb") as out_file:
-            print(f"SAVING AT: {save_file}")
             pickle.dump(data, out_file)
             print(data)
 
