@@ -22,6 +22,7 @@
 # Warn before terminating on timeout
 #SBATCH --signal=B:USR1@120
 
+SLURM_TMPDIR="/home/samuel/tmp"
 # Variables used in the script to run experiments
 JOB_NUM="$(date +%s)"
 PROCESSES=1  #${SLURM_CPUS_PER_TASK}
@@ -63,7 +64,7 @@ cleanup()
 	#cp -r "$TEMP_DIR""/$ENV""_""$AGENT""results" "$SAVE_DIR"
 
 	CLEANUP_CALLED=true
-	rm -r $TEMP_DATA_DIR
+	#rm -r $TEMP_DATA_DIR
 }
 
 
@@ -74,16 +75,16 @@ trap cleanup SIGUSR1 SIGINT SIGTERM SIGKILL
 #module load python/3.6.3
 
 # Prepare virutal env
-virtualenv --no-download $SLURM_TMPDIR/env
-source $SLURM_TMPDIR/env/bin/activate
-pip install --no-index -r "$SOURCE_DIR"/requirements.txt
+#virtualenv --no-download $SLURM_TMPDIR/env
+#source $SLURM_TMPDIR/env/bin/activate
+#pip install --no-index -r "$SOURCE_DIR"/requirements.txt
 
 # Prepare data directory
 mkdir "$TEMP_DATA_DIR"
 
 # Train
 cd $SOURCE_DIR
-source $SOURCE_DIR/../venv/bin/activate
+source $SOURCE_DIR/../actor_expert_env/bin/activate  #/../venv/bin/activate
 python "$SOURCE_DIR/"main_concurrent.py --env_name "$ENV" --agent_name "$AGENT" --runs "$RUNS" --save_dir "$TEMP_DATA_DIR" --num_processes "$PROCESSES"
 
 # Clean up, moving the data to a permanent directory
