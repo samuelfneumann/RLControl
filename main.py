@@ -48,9 +48,10 @@ def main():
     }
 
     # Get name of env and agent for save directory so it is consistent with
-    # command line arguments
-    env_name = args.env_json
-    agent_name = args.agent_json
+    # command line arguments to make it easier for Compute Canada job
+    # scripts to get the name
+    env_name = os.path.basename(args.env_json).rstrip(".json")
+    agent_name = os.path.basename(args.agent_json).rstrip(".json")
 
     # read env/agent json
     with open(args.env_json, 'r') as env_dat:
@@ -132,10 +133,13 @@ def main():
         print('Agent setting: ', agent_params)
 
         # create save directory
+        print(f"ARGS SAVE DIR: {args.save_dir}")
         save_dir = args.save_dir + "/" + env_name + "_" + \
             agent_name + 'results/'
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
+
+        print(f"SAVE DIR: {save_dir}")
 
         # create log directory (for tensorboard, gym monitor/render)
         START_DATETIME = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
@@ -196,9 +200,9 @@ def main():
 
         data["experiment_data"][sweep]["runs"].append(run_data)
 
-        save_file = save_dir + env_json['environment'] + '_' + \
-            agent_json['agent'] + f"_data_{args.indices[0]}_{args.indices[1]}_{args.indices[2]}.pkl"
+        save_file = save_dir + f"_data_{args.indices[0]}_{args.indices[1]}_{args.indices[2]}.pkl"
         with open(save_file, "wb") as out_file:
+            print(f"SAVING AT: {save_file}")
             pickle.dump(data, out_file)
             print(data)
 

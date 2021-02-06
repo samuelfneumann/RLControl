@@ -66,9 +66,8 @@ def run(env_name, agent_name, num_processes, runs, save_dir):
                 p.starmap(run_experiment, args)
 
         # Combine data files
-        agent_name = agent_json["agent"]
-        #data_path=os.path.join(save_dir)
-        combine_data_dictionaries(save_dir)
+        data_path=os.path.join(save_dir, f"{env_name}_{agent_name}results")
+        combine_data_dictionaries(data_path)
     else:
         # Sequential runs
         run_experiment(env_file, agent_file, 0, 1, total_num_sweeps * runs,
@@ -121,6 +120,7 @@ def combine_data_dictionaries(dir):
         existing in both dictionaries
     """
     print(dir)
+    print(os.listdir(dir))
     files = glob(os.path.join(dir, "*.pkl"))
     print(files)
 
