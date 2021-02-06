@@ -16,7 +16,7 @@
         "sample_for_eval": ["False"],
         "use_true_q": ["False"],
 
-        "entropy_scale": [1, 0.1],
+        "entropy_scale": [1.0, 0.1, 0.01],
 
         "l_param": [6],
         "N_param": [64],

@@ -94,6 +94,12 @@ def main():
     # Experiment runs per each hyperparameter
     data["experiment_data"] = {}
 
+    # create save directory
+    save_dir = args.save_dir + "/" + env_name + "_" + \
+        agent_name + 'results/'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
     from utils.main_utils import get_sweep_parameters, create_agent
     for index in range(args.indices[0], args.indices[2], args.indices[1]):
 
@@ -132,16 +138,8 @@ def main():
         print(f"RANDOM_SEED: {RANDOM_SEED}")
         print('Agent setting: ', agent_params)
 
-        # create save directory
-        save_dir = args.save_dir + "/" + env_name + "_" + \
-            agent_name + 'results/'
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
-
         # create log directory (for tensorboard, gym monitor/render)
         START_DATETIME = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-        env_name = env_json["environment"]
-        agent_name = agent_json["agent"]
         log_dir = './results/{}_{}results/log_summary/{}/{}_{}_{}'.format(str(env_json['environment']), str(agent_json['agent']), str(agent_json['agent']), str(SETTING_NUM), str(RUN_NUM), str(START_DATETIME))
 
         # tf 1.8
@@ -197,10 +195,9 @@ def main():
 
         data["experiment_data"][sweep]["runs"].append(run_data)
 
-        save_file = save_dir + f"_data_{args.indices[0]}_{args.indices[1]}_{args.indices[2]}.pkl"
+        save_file = save_dir + f"data_{args.indices[0]}_{args.indices[1]}_{args.indices[2]}.pkl"
         with open(save_file, "wb") as out_file:
             pickle.dump(data, out_file)
-            print(data)
 
         # save to file
         # prefix = save_dir + env_json['environment'] + '_'+agent_json['agent'] + '_setting_' + str(SETTING_NUM) + '_run_'+str(RUN_NUM)
