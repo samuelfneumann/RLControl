@@ -140,11 +140,11 @@ def main():
 
         # create log directory (for tensorboard, gym monitor/render)
         START_DATETIME = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-        log_dir = './results/{}_{}results/log_summary/{}/{}_{}_{}'.format(str(env_json['environment']), str(agent_json['agent']), str(agent_json['agent']), str(SETTING_NUM), str(RUN_NUM), str(START_DATETIME))
+        log_dir = './results/log{}_{}results/log_summary/{}/{}_{}_{}'.format(str(env_json['environment']), str(agent_json['agent']), str(agent_json['agent']), str(SETTING_NUM), str(RUN_NUM), str(START_DATETIME))
 
         # tf 1.8
         #writer = tf.summary.create_file_writer(log_dir)
-        writer = tf.summary.FileWriter(log_dir)
+        writer = tf.compat.v1.summary.FileWriter(log_dir)
         # tf 2.0
         # writer = tf.summary.create_file_writer(log_dir)
         agent_params["writer"] = writer
