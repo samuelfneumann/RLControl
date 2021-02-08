@@ -23,7 +23,7 @@ done
 ENV_NAME=$1
 AGENT_NAME=$2
 
-source /home/samuel/Documents/Actor-Expert/actor_expert_env/bin/activate
+source /home/sfneuman/Actor-Expert/venv/bin/activate
 #echo "Bash version ${BASH_VERSION}..."
 
 # Inclusive

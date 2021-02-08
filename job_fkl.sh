@@ -22,13 +22,12 @@
 # Warn before terminating on timeout
 #SBATCH --signal=B:USR1@120
 
-SLURM_TMPDIR="/home/samuel/tmp"
 # Variables used in the script to run experiments
 JOB_NUM="$(date +%s)"
 PROCESSES=1  #${SLURM_CPUS_PER_TASK}
 AGENT="forward_kl"
 ENV="Pendulum-v0"
-RUNS=1
+RUNS=2
 SOURCE_DIR="/home/sfneuman/Actor-Expert/RLControl"
 SAVE_DIR="$SOURCE_DIR/results"
 TEMP_DATA_DIR="$SLURM_TMPDIR/data"
@@ -61,10 +60,11 @@ cleanup()
 	tar -cvzf "$tarball_results" "$ENV""_""$AGENT""results"
 	cp "$tarball_results" "$SAVE_DIR"
 	cd "$cwd"
-	#cp -r "$TEMP_DIR""/$ENV""_""$AGENT""results" "$SAVE_DIR"
+	#cp -r "$TEMP_DATA_DIR""/$ENV""_""$AGENT""results" "$SAVE_DIR"
 
 	CLEANUP_CALLED=true
-	#rm -r $TEMP_DATA_DIR
+	rm -r $TEMP_DATA_DIR
+	#rm -r $SLURM_TMPDIR/env
 }
 
 
@@ -72,7 +72,10 @@ cleanup()
 trap cleanup SIGUSR1 SIGINT SIGTERM SIGKILL
 
 # Load in required modules
-#module load python/3.6.3
+module load StdEnv/2020 cudacore/.11.0.2
+module load cuda/11.0
+module load cudnn/8.0.3
+module load python/3.7
 
 # Prepare virutal env
 #virtualenv --no-download $SLURM_TMPDIR/env
@@ -84,7 +87,8 @@ mkdir "$TEMP_DATA_DIR"
 
 # Train
 cd $SOURCE_DIR
-source $SOURCE_DIR/../actor_expert_env/bin/activate  #/../venv/bin/activate
+echo $SOURCE_DIR
+source $SOURCE_DIR/../venv_3.7/bin/activate
 python "$SOURCE_DIR/"main_concurrent.py --env_name "$ENV" --agent_name "$AGENT" --runs "$RUNS" --save_dir "$TEMP_DATA_DIR" --num_processes "$PROCESSES"
 
 # Clean up, moving the data to a permanent directory

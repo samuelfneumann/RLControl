@@ -11,8 +11,8 @@
         "critic_l1_dim": [128],
         "critic_l2_dim": [128],
 
-        "pi_lr": [1e-2, 1e-3, 1e-4, 1e-5],
-        "qf_vf_lr": [1e-1, 1e-2, 1e-3],
+        "pi_lr": [1e-2],
+        "qf_vf_lr": [1e-1],
 
         "sample_for_eval": ["False"],
         "use_true_q": ["False"],
