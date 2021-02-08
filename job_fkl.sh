@@ -14,10 +14,10 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=4000
+#SBATCH --mem-per-cpu=8000
 
 # Time for job completion
-#SBATCH -t 0-03:00
+#SBATCH -t 0-03:00:00
 
 # Warn before terminating on timeout
 #SBATCH --signal=B:USR1@120
@@ -27,7 +27,7 @@ JOB_NUM="$(date +%s)"
 PROCESSES=1  #${SLURM_CPUS_PER_TASK}
 AGENT="forward_kl"
 ENV="Pendulum-v0"
-RUNS=2
+RUNS=10
 SOURCE_DIR="/home/sfneuman/Actor-Expert/RLControl"
 SAVE_DIR="$SOURCE_DIR/results"
 TEMP_DATA_DIR="$SLURM_TMPDIR/data"
@@ -42,6 +42,10 @@ CLEANUP_CALLED=false
 # Globals:
 #	CLEANUP_CALLED - whether or not the cleanup function has already
 #			 been called
+#	SOURCE_DIR - the directory which contains all source code
+#	TEMP_DATA_DIR - the temporary directory that the data is saved in
+#	AGENT - the name of the agent trained
+#	ENV - the name of the environment trained on
 ################################
 cleanup()
 {
@@ -87,7 +91,6 @@ mkdir "$TEMP_DATA_DIR"
 
 # Train
 cd $SOURCE_DIR
-echo $SOURCE_DIR
 source $SOURCE_DIR/../venv_3.7/bin/activate
 python "$SOURCE_DIR/"main_concurrent.py --env_name "$ENV" --agent_name "$AGENT" --runs "$RUNS" --save_dir "$TEMP_DATA_DIR" --num_processes "$PROCESSES"
 
