@@ -145,8 +145,7 @@ def combine_data_dictionaries(dir):
             for key in in_data["experiment_data"]:
                 # Check if key exists
                 if key in data["experiment_data"]:
-                    print(key)
-                    raise KeyError("cannot add key that already exists")
+                    data["experiment_data"][key]["runs"].extend(in_data["experiment_data"][key]["runs"])
 
                 # Add data to dictionary
                 data["experiment_data"][key] = in_data["experiment_data"][key]
