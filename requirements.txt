@@ -1,9 +1,11 @@
-numpy==1.18.4
+numpy
+tensorflow_cpu==1.15.0
 scipy
-click
-joblib==0.14.0
-gym==0.18.0
-matplotlib
 quadpy
-scikit_learn
 spinup
+matplotlib
+click
+torch==1.7.1
+gym==0.18.0
+joblib
+scikit_learn

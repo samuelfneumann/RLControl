@@ -94,11 +94,18 @@ def main():
     # Experiment runs per each hyperparameter
     data["experiment_data"] = {}
 
-    # create save directory
+    # create save directory - causes problems when running concurrently if 
+    # many prcesses try to make this directoy simultaneously - causes some
+    # runs to fail
     save_dir = args.save_dir + "/" + env_name + "_" + \
         agent_name + 'results/'
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
+#    if not os.path.exists(save_dir):
+#        try:
+        #print("ERROR:", save_dir)
+        #os.makedirs(save_dir)
+#        except FileNotFoundError:
+#           pass
+    #print(f"SAVE_DIR: {save_dir}")
 
     from utils.main_utils import get_sweep_parameters, create_agent
     for index in range(args.indices[0], args.indices[2], args.indices[1]):
@@ -140,7 +147,7 @@ def main():
 
         # create log directory (for tensorboard, gym monitor/render)
         START_DATETIME = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-        log_dir = './results/log{}_{}results/log_summary/{}/{}_{}_{}'.format(str(env_json['environment']), str(agent_json['agent']), str(agent_json['agent']), str(SETTING_NUM), str(RUN_NUM), str(START_DATETIME))
+        log_dir = '/home/sfneuman/Actor-Expert/RLControl/results/log{}_{}results/log_summary/{}/{}_{}_{}'.format(str(env_json['environment']), str(agent_json['agent']), str(agent_json['agent']), str(SETTING_NUM), str(RUN_NUM), str(START_DATETIME))
 
         # tf 1.8
         #writer = tf.summary.create_file_writer(log_dir)

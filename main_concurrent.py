@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 # Import modules
+import sys 
+sys.path.insert(1, "/home/sfneuman/Actor-Expert/RLControl")
 import click
 import subprocess
 import multiprocessing
@@ -47,6 +49,12 @@ def run(env_name, agent_name, num_processes, runs, save_dir):
     runs : int
         The number of runs per experiment
     """
+    # Create save directory before running concurrently
+    data_path = save_dir + "/" + env_name + "_" + \
+        agent_name + 'results/'
+    if not os.path.exists(data_path):
+        os.makedirs(data_path)
+
     with open("/home/sfneuman/Actor-Expert/RLControl/jsonfiles/agent/" + agent_name + ".json") as in_file:
         agent_json = json.load(in_file)
     _, total_num_sweeps = get_sweep_parameters(agent_json['sweeps'], 0)
@@ -66,7 +74,7 @@ def run(env_name, agent_name, num_processes, runs, save_dir):
                 p.starmap(run_experiment, args)
 
         # Combine data files
-        data_path=os.path.join(save_dir, f"{env_name}_{agent_name}results")
+        #data_path=os.path.join(save_dir, f"{env_name}_{agent_name}results")
         combine_data_dictionaries(data_path)
     else:
         # Sequential runs
@@ -92,7 +100,7 @@ def run_experiment(env_file, agent_file, start, step, stop, save_dir):
     stop : int
         The hyperparameter index to stop the experiment at
     """
-    subprocess.run(["python3", "main.py", "--env_json", env_file,
+    subprocess.run(["python3", "/home/sfneuman/Actor-Expert/RLControl/main.py", "--env_json", env_file,
                     "--agent_json", agent_file, "--indices", str(start),
                     str(step), str(stop), "--save_dir", save_dir])
 
