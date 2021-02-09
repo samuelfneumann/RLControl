@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
 # Import modules
-import multiprocessing
+#import multiprocessing
 import click
-import subprocess
+#import subprocess
 import os
-import json
+#import json
 from glob import glob
 import pickle
-from utils.main_utils import get_sweep_parameters
-import main
+#from utils.main_utils import get_sweep_parameters
+#import main
 
 # TODO:
 #   Read in the json files once and pass to subprocesses
@@ -126,10 +126,7 @@ def combine_data_dictionaries(dir):
         If one dictionary would overwrite another due to the same key
         existing in both dictionaries
     """
-    print(dir)
-    print(os.listdir(dir))
     files = glob(os.path.join(dir, "*.pkl"))
-    print(files)
 
     # Use first dictionary as base dictionary
     with open(files[0], "rb") as in_file:
@@ -148,7 +145,8 @@ def combine_data_dictionaries(dir):
                     data["experiment_data"][key]["runs"].extend(in_data["experiment_data"][key]["runs"])
 
                 # Add data to dictionary
-                data["experiment_data"][key] = in_data["experiment_data"][key]
+                else:
+                    data["experiment_data"][key] = in_data["experiment_data"][key]
 
     with open(os.path.join(dir, "data.pkl"), "wb") as out_file:
         pickle.dump(data, out_file)
