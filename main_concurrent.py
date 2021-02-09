@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 
 # Import modules
-import sys 
-sys.path.insert(1, "/home/sfneuman/Actor-Expert/RLControl")
+import multiprocessing
 import click
 import subprocess
-import multiprocessing
 import os
 import json
 from glob import glob
 import pickle
 from utils.main_utils import get_sweep_parameters
+import main
 
 # TODO:
 #   Read in the json files once and pass to subprocesses
@@ -66,12 +65,12 @@ def run(env_name, agent_name, num_processes, runs, save_dir):
         # Concurrent runs
         args = []
         for i in range(total_num_sweeps):
-            arg = (env_file, agent_file, i, total_num_sweeps,
-                   total_num_sweeps * runs, save_dir)
+            arg = (env_file, agent_file, (i, total_num_sweeps,
+                   total_num_sweeps * runs), save_dir)
             args.append(arg)
 
         with multiprocessing.Pool(num_processes) as p:
-                p.starmap(run_experiment, args)
+                p.starmap(main.main, args)
 
         # Combine data files
         #data_path=os.path.join(save_dir, f"{env_name}_{agent_name}results")

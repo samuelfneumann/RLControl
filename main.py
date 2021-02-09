@@ -166,13 +166,13 @@ def main():
         agent = create_agent(agent_json['agent'], config)
 
         # monitor/render
-        if args.monitor or args.render:
-            monitor_dir = log_dir+'/monitor'
+        #if args.monitor or args.render:
+        #    monitor_dir = log_dir+'/monitor'
 
-            if args.render:
-                train_env.instance = gym.wrappers.Monitor(train_env.instance, monitor_dir, video_callable=(lambda x: True), force=True)
-            else:
-                train_env.instance = gym.wrappers.Monitor(train_env.instance, monitor_dir, video_callable=False, force=True)
+        #    if args.render:
+        #        train_env.instance = gym.wrappers.Monitor(train_env.instance, monitor_dir, video_callable=(lambda x: True), force=True)
+        #    else:
+        #        train_env.instance = gym.wrappers.Monitor(train_env.instance, monitor_dir, video_callable=False, force=True)
 
         # initialize experiment
         from experiment import Experiment
@@ -239,14 +239,14 @@ def main():
 
         # save json file as well
         # Bimodal1DEnv_uneq_var1_ActorCritic_agent_Params
-        with open('{}{}_{}_agent_Params.json'.format(save_dir, env_json['environment'], agent_json['agent']), 'w') as json_save_file:
-            json.dump(agent_json, json_save_file)
+        #with open('{}{}_{}_agent_Params.json'.format(save_dir, env_json['environment'], agent_json['agent']), 'w') as json_save_file:
+        #    json.dump(agent_json, json_save_file)
 
         # generate video and delete figures
-        if args.write_plot:
-            subprocess.run(["ffmpeg", "-framerate", "24", "-i", "{}/figures/steps_%01d.png".format(log_dir), "{}.mp4".format(log_dir)])
+        #if args.write_plot:
+        #    subprocess.run(["ffmpeg", "-framerate", "24", "-i", "{}/figures/steps_%01d.png".format(log_dir), "{}.mp4".format(log_dir)])
             # subprocess.run(["mv", "{}.mp4".format(log_dir), "{}/../".format(log_dir)])
-            subprocess.run(["rm", "-rf", "{}/figures".format(log_dir)])
+        #    subprocess.run(["rm", "-rf", "{}/figures".format(log_dir)])
 
 
 if __name__ == '__main__':

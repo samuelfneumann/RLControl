@@ -32,7 +32,10 @@ save_dir=$6
 
 echo "saving in $save_dir"
 
-echo "====================================================="
-echo -e "\nRunning Experiment: start: $start_idx; end before $end_idx; increment $increment\n"
-echo "====================================================="
-python3 "$SOURCE/main.py" --env_json "$SOURCE/jsonfiles/environment/$ENV_NAME.json" --agent_json "$SOURCE/jsonfiles/agent/$AGENT_NAME.json" --indices "$start_idx" "$increment" "$end_idx" --save_dir "$save_dir" # --write_plot
+for i in $(seq ${start_idx} ${increment} ${end_idx})
+do
+	echo "====================================================="
+	echo -e "\nRunning Experiment: $i\n"
+	echo "====================================================="
+	python3 "$SOURCE/main.py" --env_json "$SOURCE/jsonfiles/environment/$ENV_NAME.json" --agent_json "$SOURCE/jsonfiles/agent/$AGENT_NAME.json" --indices "$start_idx" "$increment" "$end_idx" --save_dir "$save_dir" # --write_plot
+done
