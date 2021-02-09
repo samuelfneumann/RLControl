@@ -13,8 +13,8 @@
 # Number of cores and memory in MiB
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=8000
+#SBATCH --cpus-per-task=27
+#SBATCH --mem-per-cpu=12000
 
 # Time for job completion
 #SBATCH -t 0-03:00:00
@@ -24,10 +24,10 @@
 
 # Variables used in the script to run experiments
 JOB_NUM="$(date +%s)"
-PROCESSES=1  #${SLURM_CPUS_PER_TASK}
+PROCESSES=4  #${SLURM_CPUS_PER_TASK}
 AGENT="forward_kl"
 ENV="Pendulum-v0"
-RUNS=10
+RUNS=5
 SOURCE_DIR="/home/sfneuman/Actor-Expert/RLControl"
 SAVE_DIR="$SOURCE_DIR/results"
 TEMP_DATA_DIR="$SLURM_TMPDIR/data"
@@ -67,7 +67,7 @@ cleanup()
 	#cp -r "$TEMP_DATA_DIR""/$ENV""_""$AGENT""results" "$SAVE_DIR"
 
 	CLEANUP_CALLED=true
-	rm -r $TEMP_DATA_DIR
+	#rm -r $TEMP_DATA_DIR
 	#rm -r $SLURM_TMPDIR/env
 }
 
@@ -82,16 +82,21 @@ module load cudnn/8.0.3
 module load python/3.7
 
 # Prepare virutal env
-#virtualenv --no-download $SLURM_TMPDIR/env
-#source $SLURM_TMPDIR/env/bin/activate
+echo "creating $(python3 --version) venv"
+python3 -m virtualenv --no-download $SLURM_TMPDIR/env
+source $SLURM_TMPDIR/env/bin/activate
+echo "installing requirements..."
 #pip install --no-index -r "$SOURCE_DIR"/requirements.txt
+pip install numpy scipy quadpy spinup matplotlib click joblib scikit_learn pillow==7.2.0 gym
+pip install --no-index tensorflow_cpu==1.15.0 torch==1.7.1
+echo -e "done\n"
 
 # Prepare data directory
 mkdir "$TEMP_DATA_DIR"
 
 # Train
-cd $SOURCE_DIR
-source $SOURCE_DIR/../venv_3.7/bin/activate
+#cd $SOURCE_DIR
+#source $SOURCE_DIR/../venv_3.7/bin/activate
 python "$SOURCE_DIR/"main_concurrent.py --env_name "$ENV" --agent_name "$AGENT" --runs "$RUNS" --save_dir "$TEMP_DATA_DIR" --num_processes "$PROCESSES"
 
 # Clean up, moving the data to a permanent directory
