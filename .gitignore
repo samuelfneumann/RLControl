@@ -6,3 +6,6 @@ tmp
 .idea/misc.xml
 .idea/vcs.xml
 /venv
+Reports
+.vscode
+*.log
