@@ -1,12 +1,231 @@
+#!/usr/bin/env python3
+
 # Import modules
 import matplotlib.pyplot as plt
 import utils.experiment_utils as exp
+import numpy as np
 
 
-def plot_mean_with_stderr(data, type_, ind, smooth_over):
+def plot_mean_with_runs(data, type_, ind, smooth_over, names, colours,
+                        figsize=(12, 6), xlim=None, ylim=None,
+                        alpha=0.1):
+    """
+    Plots both the mean return per episode (over runs) as well as the return
+    for each individual run (including "mini-runs", if the number of evaluation
+    episodes per timestep > 1 and if plotting evaluation data)
+
+    Parameters
+    ----------
+    data : list of dict
+        The Python data dictionaries generated from running main.py for the
+        agents
+    type_ : str
+        Which type of data to plot, one of "eval" or "train"
+    ind : iter of iter of int
+        The list of lists of hyperparameter settings indices to plot for
+        each agent. For example [[1, 2], [3, 4]] means that the first agent
+        plots will use hyperparameter settings indices 1 and 2, while the
+        second will use 3 and 4.
+    smooth_over : list of int
+        The number of previous data points to smooth over for the agent's
+        plot for each data dictionary. Note that this is *not* the number of
+        timesteps to smooth over, but rather the number of data points to
+        smooth over. For example, if you save the return every 1,000
+        timesteps, then setting this value to 15 will smooth over the last
+        15 readings, or 15,000 timesteps. For example, [1, 2] will mean that
+        the plots using the first data dictionary will smooth over the past 1
+        data points, while the second will smooth over the passed 2 data
+        points for each hyperparameter setting.
+    figsize : tuple(int, int)
+        The size of the figure to plot
+    names : list of str
+        The name of the agents, used for the legend
+    colours : list of list of str
+        The colours to use for each hyperparameter settings plot for each data
+        dictionary
+    xlim : float, optional
+        The x limit for the plot, by default None
+    ylim : float, optional
+        The y limit for the plot, by default None
+    alpha : float, optional
+        The alpha to use for plots of the runs, by default 0.1
+    """
+    # Set up figure
+    fig = plt.figure(figsize=figsize)
+    ax = fig.add_subplot()
+    ax.set_xlabel("Timesteps")
+    ax.set_ylabel("Return")
+    ax.set_title(f"Mean Return with Runs")
+
+    if xlim is not None:
+        ax.set_xlim(xlim)
+    if ylim is not None:
+        ax.set_ylim(ylim)
+
+    # Plot for each data dictionary given
+    for i in range(len(data)):
+        for j in range(len(ind[i])):
+            timesteps, mean, _ = exp.get_mean_stderr(data[i], type_, ind[i][j],
+                                                        smooth_over[i])
+
+            # Plot the mean
+            label = f"{names[i]} - Hyperparameter Setting {ind[i][j]}"
+            ax.plot(timesteps, mean, label=label, color=colours[i][j])
+
+            # Plot each run
+            for run in data[i]["experiment_data"][ind[i][j]]["runs"]:
+                run_type = type_ + "_episode_rewards"
+                run_data = run[run_type]
+
+                # Expand the dimensions of the training data so that it
+                # can be considered in the same way as eval data
+                if type_ == "train":
+                    run_data = np.expand_dims(run_data, axis=1)
+
+                # Plot each episodes (1 for train, >= 1 for eval) at each
+                # timestep evaluated/trained in the run
+                for k in range(run_data.shape[1]):
+
+                    # Smooth over timesteps in the episode (1 for train,
+                    # >= 1 for eval)
+                    if smooth_over[i] > 1:
+                        kernel = np.ones((smooth_over[i])) / smooth_over
+                        eval_ep = np.convolve(run_data[:, k], kernel, mode="valid")
+                    else:
+                        eval_ep = run_data[:, k]
+
+                    ax.plot(timesteps, eval_ep, color=colours[i][j],
+                            linestyle="--", alpha=alpha)
+
+    ax.legend()
+
+    fig.show()
+
+    return fig, ax
+
+
+def plot_mean_with_stderr(data, type_, ind, smooth_over, names, fig=None,
+                          ax=None, figsize=(12, 6), xlim=None, ylim=None,
+                          alpha=0.1, colours=None):
+    """
+    Plots the average training or evaluation return over all runs for two
+    different agents for a number of specific hyperparameter settings.
+
+    Given a list of data dictionaries of the form returned by main.py, this
+    function will plot each episodic return for the list of hyperparameter
+    settings ind each data dictionary. The ind argument is a list, where each
+    element is a list of hyperparameter settings to plot for the data
+    dictionary at the same index as this list. For example, if ind[i] = [1, 2],
+    then plots will be generated for the data dictionary at location i
+    in the data argument for hyperparameter settings ind[i] = [1, 2].
+    The smooth_over argument tells how many previous data points to smooth
+    over.
+
+    Parameters
+    ----------
+    data : list of dict
+        The Python data dictionaries generated from running main.py for the
+        agents
+    type_ : str
+        Which type of data to plot, one of "eval" or "train"
+    ind : iter of iter of int
+        The list of lists of hyperparameter settings indices to plot for
+        each agent. For example [[1, 2], [3, 4]] means that the first agent
+        plots will use hyperparameter settings indices 1 and 2, while the
+        second will use 3 and 4.
+    smooth_over : list of int
+        The number of previous data points to smooth over for the agent's
+        plot for each data dictionary. Note that this is *not* the number of
+        timesteps to smooth over, but rather the number of data points to
+        smooth over. For example, if you save the return every 1,000
+        timesteps, then setting this value to 15 will smooth over the last
+        15 readings, or 15,000 timesteps. For example, [1, 2] will mean that
+        the plots using the first data dictionary will smooth over the past 1
+        data points, while the second will smooth over the passed 2 data
+        points for each hyperparameter setting.
+    fig : plt.figure
+        The figure to plot on, by default None. If None, creates a new figure
+    ax : plt.Axes
+        The axis to plot on, by default None, If None, creates a new axis
+    figsize : tuple(int, int)
+        The size of the figure to plot
+    names : list of str
+        The name of the agents, used for the legend
+    xlim : float, optional
+        The x limit for the plot, by default None
+    ylim : float, optional
+        The y limit for the plot, by default None
+    alpha : float, optional
+        The alpha channel for the plot, by default 0.1
+    alpha : float, optional
+        The alpha channel for the plot, by default 0.1
+    colours : list of list of str
+        The colours to use for each hyperparameter settings plot for each data
+        dictionary
+
+    Returns
+    -------
+    plt.figure, plt.Axes
+        The figure and axes of the plot
+    """
+    # Set the colours to be default if not specified
+    if colours is None:
+        colours = []
+        for i in range(len(ind)):
+            colours.append([None for _ in ind[i]])
+
+    # Track the total timesteps per hyperparam setting over all episodes and
+    # the cumulative timesteps per episode per data dictionary (timesteps
+    # should be consistent between all hp settings in a single data dict)
+    total_timesteps = []
+    cumulative_timesteps = []
+
+    for i in range(len(data)):
+        if type_ == "train":
+            cumulative_timesteps.append(exp.get_cumulative_timesteps(data[i]
+                                        ["experiment_data"][ind[i][0]]["runs"]
+                                        [0]["train_episode_steps"]))
+        elif type_ == "eval":
+            cumulative_timesteps.append(data[i]["experiment_data"][ind[i][0]]
+                                        ["runs"][0]["timesteps_at_eval"])
+        else:
+            raise ValueError("type_ must be one of 'train', 'eval'")
+        total_timesteps.append(cumulative_timesteps[-1][-1])
+
+    # Find the minimum of total trained-for timesteps. Each plot will only
+    # be plotted on the x-axis until this value
+    min_timesteps = min(total_timesteps)
+
+    # For each data dictionary, find the minimum index where the timestep at
+    # that index is >=  minimum timestep
+    last_ind = []
+    for cumulative_timesteps_per_data in cumulative_timesteps:
+        final_ind = np.where(cumulative_timesteps_per_data >=
+                            min_timesteps)[0][0]
+        # Since indexing will stop right before the minimum, increment it
+        last_ind.append(final_ind + 1)
+
+    # Plot all data for all HP settings, only up until the minimum index
+    fig, ax = None, None
+    for i in range(len(data)):
+        fig, ax = plot_mean_with_stderr_(data=data[i], type_=type_, ind=ind[i],
+                                         smooth_over=smooth_over[i],
+                                         name=names[i], fig=fig, ax=ax,
+                                         figsize=figsize, xlim=xlim, ylim=ylim,
+                                         last_ind=last_ind[i], alpha=alpha,
+                                         colours=colours[i])
+
+    return fig, ax
+
+
+def plot_mean_with_stderr_(data, type_, ind, smooth_over, fig=None, ax=None,
+                           figsize=(12, 6), name="", last_ind=-1,
+                           xlabel="Timesteps", ylabel="Average Return",
+                           timestep_multiply=1, xlim=None, ylim=None,
+                           alpha=0.1, colours=None):
     """
     Plots the average training or evaluation return over all runs for a
-    specific hyperparameter setting.
+    list of specific hyperparameter settings for a single agent.
 
     Parameters
     ----------
@@ -22,28 +241,86 @@ def plot_mean_with_stderr(data, type_, ind, smooth_over):
         of data points to smooth over. For example, if you save the return
         every 1,000 timesteps, then setting this value to 15 will smooth
         over the last 15 readings, or 15,000 timesteps.
+    fig : plt.figure
+        The figure to plot on, by default None. If None, creates a new figure
+    ax : plt.Axes
+        The axis to plot on, by default None, If None, creates a new axis
+    figsize : tuple(int, int)
+        The size of the figure to plot
+    name : str, optional
+        The name of the agent, used for the legend
+    last_ind : int, optional
+        The index of the last element to plot in the returns list,
+        by default -1. This is useful if you want to plot many things on the
+        same axis, but all of which have a different number of elements. This
+        way, we can plot the first last_ind elements of each returns for each
+        agent.
+    timestep_multiply : int, optional
+        A value to multiply each timstep by, by default 1. This is useful if
+        your agent does multiple updates per timestep and you want to plot
+        performance vs. number of updates.
+    xlim : float, optional
+        The x limit for the plot, by default None
+    ylim : float, optional
+        The y limit for the plot, by default None
+    alpha : float, optional
+        The alpha channel for the plot, by default 0.1
+    colours : list of str
+        The colours to use for each plot
 
     Returns
     -------
     plt.figure, plt.Axes
         The figure and axes of the plot
+
+    Raises
+    ------
+    ValueError
+        When an axis is passed but no figure is passed
+        When an appropriate number of colours is not specified to cover all
+        hyperparameter settings
     """
+    if colours is not None and len(colours) != len(ind):
+        raise ValueError("must have one colour for each hyperparameter " +
+                         "setting")
+
+    if ax is not None and fig is None:
+        raise ValueError("must pass figure when passing axis")
+
     # Set up figure
-    fig = plt.figure(figsize=(12, 6))
-    ax = fig.add_subplot()
+    if ax is None and fig is None:
+        fig = plt.figure(figsize=figsize)
+        ax = fig.add_subplot()
+
+    if xlim is not None:
+        ax.set_xlim(xlim)
+    if ylim is not None:
+        ax.set_ylim(ylim)
 
     # Plot with the standard error
-    for i in ind:
-        timesteps, mean, std = exp.get_mean_stderr(data, type_, i, smooth_over)
-        ax.plot(timesteps, mean, label=f"Hyperparameter settings {i}")
-        ax.fill_between(timesteps, mean-std, mean+std, alpha=0.15)
-    ax.legend()
+    for i in range(len(ind)):
+        timesteps, mean, std = exp.get_mean_stderr(data, type_, ind[i],
+                                                   smooth_over)
+        timesteps = np.array(timesteps[:last_ind]) * timestep_multiply
+        mean = mean[:last_ind]
+        std = std[:last_ind]
+        if colours is not None:
+            ax.plot(timesteps, mean, color=colours[i],
+                    label=f"{name} hyperparameter settings {ind[i]}")
+            ax.fill_between(timesteps, mean-std, mean+std, alpha=alpha,
+                            color=colours[i])
+        else:
+            ax.plot(timesteps, mean,
+                    label=f"{name} hyperparameter settings {ind[i]}")
+            ax.fill_between(timesteps, mean-std, mean+std, alpha=alpha)
 
+    ax.legend()
     ax.set_title(f"Average {type_.title()} Return per Run with Standard Error")
-    ax.set_ylabel("Average Return")
-    ax.set_xlabel("Timesteps")
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel(xlabel)
 
     fig.show()
+
     return fig, ax
 
 
