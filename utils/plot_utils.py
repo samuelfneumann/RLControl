@@ -8,7 +8,7 @@ import numpy as np
 
 def plot_mean_with_runs(data, type_, ind, smooth_over, names, colours,
                         figsize=(12, 6), xlim=None, ylim=None,
-                        alpha=0.1):
+                        alpha=0.1, plot_avg=True):
     """
     Plots both the mean return per episode (over runs) as well as the return
     for each individual run (including "mini-runs", if the number of evaluation
@@ -49,6 +49,9 @@ def plot_mean_with_runs(data, type_, ind, smooth_over, names, colours,
         The y limit for the plot, by default None
     alpha : float, optional
         The alpha to use for plots of the runs, by default 0.1
+    plot_avg : bool
+        If plotting evaluation data, should the episodes at each evaluation
+        point be averaged or plotted separately, by default True.
     """
     # Set up figure
     fig = plt.figure(figsize=figsize)
@@ -81,6 +84,9 @@ def plot_mean_with_runs(data, type_, ind, smooth_over, names, colours,
                 # can be considered in the same way as eval data
                 if type_ == "train":
                     run_data = np.expand_dims(run_data, axis=1)
+
+                if plot_avg:
+                    run_data = np.expand_dims(run_data.mean(axis=1), axis=1)
 
                 # Plot each episodes (1 for train, >= 1 for eval) at each
                 # timestep evaluated/trained in the run
