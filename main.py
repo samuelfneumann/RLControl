@@ -94,7 +94,7 @@ def main():
     # Experiment runs per each hyperparameter
     data["experiment_data"] = {}
 
-    # create save directory - causes problems when running concurrently if 
+    # create save directory - causes problems when running concurrently if
     # many prcesses try to make this directoy simultaneously - causes some
     # runs to fail
     save_dir = args.save_dir + "/" + env_name + "_" + \
@@ -150,8 +150,8 @@ def main():
         log_dir = '/home/sfneuman/Actor-Expert/RLControl/results/log{}_{}results/log_summary/{}/{}_{}_{}'.format(str(env_json['environment']), str(agent_json['agent']), str(agent_json['agent']), str(SETTING_NUM), str(RUN_NUM), str(START_DATETIME))
 
         # tf 1.8
-        #writer = tf.summary.create_file_writer(log_dir)
-        writer = tf.compat.v1.summary.FileWriter(log_dir)
+        # writer = tf.summary.create_file_writer(log_dir)
+        writer = tf.summary.FileWriter(log_dir)
         # tf 2.0
         # writer = tf.summary.create_file_writer(log_dir)
         agent_params["writer"] = writer
@@ -202,6 +202,8 @@ def main():
 
         data["experiment_data"][sweep]["runs"].append(run_data)
 
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
         save_file = save_dir + f"data_{args.indices[0]}_{args.indices[1]}_{args.indices[2]}.pkl"
         with open(save_file, "wb") as out_file:
             pickle.dump(data, out_file)

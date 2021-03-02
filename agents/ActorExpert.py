@@ -36,6 +36,11 @@ class ActorExpert_Network_Manager(BaseNetwork_Manager):
         if config.use_true_q == "True":
             self.use_true_q = True
 
+        self.sarsa_update = False
+        if config.sarsa_update:
+            self.sars_update = True
+            print("Using SARSA Updates to Learn Q_pi")
+
         self.config = config
 
     def take_action(self, state, is_train, is_start):
@@ -112,18 +117,32 @@ class ActorExpert_Network_Manager(BaseNetwork_Manager):
 
         batch_size = np.shape(state_batch)[0]
 
-        # Expert Update
+        # Expert Update - Q-Learning. FKL/RKL do not use Q-Learning
+        # An option must be added here for Q to track the current policy
+        # It will basically be a copy-psate of reversekl_network.py lines
+        # 145 - 147.
 
         if not self.use_true_q:
             # Perhaps do GA on the Q function
 
             # Use original Actor
-            _, next_action_batch_init_target = self.hydra_network.predict_action(next_state_batch, True)
+            # Here, we use gradient ascent on the policy to find the best action!!
+            # I.e. the action with the max value. As in Alg 1, we do not have to
+            # do grad ascent on the Q function since the Actor is tracking the max
+            # Q (Expert does Q learning) it is sufficient to use one of the Actor modes
+            #
+            # Viewing this as a greedification objective and not using Q learning,
+            # we just would not call the function self.policy_gradient_ascent() in
+            # the predict_action() function on the next line
+            if not self.sarsa_update:
+                _, next_action_batch_init_target = self.hydra_network.predict_action(next_state_batch, True)
 
-            if self.hydra_network.use_better_q_gd:
-                next_action_batch_final_target = self.hydra_network.q_gradient_ascent(next_state_batch, next_action_batch_init_target, True, is_better_q_gd=True)
+                if self.hydra_network.use_better_q_gd:
+                    next_action_batch_final_target = self.hydra_network.q_gradient_ascent(next_state_batch, next_action_batch_init_target, True, is_better_q_gd=True)
+                else:
+                    next_action_batch_final_target = next_action_batch_init_target
             else:
-                next_action_batch_final_target = next_action_batch_init_target
+                _, next_action_batch_final_target = self.hydra_network.sample_action(next_state_batch, True)
 
             # batchsize * n
             target_q = self.hydra_network.predict_q_target(next_state_batch, next_action_batch_final_target, True)

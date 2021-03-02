@@ -65,8 +65,6 @@ class ActorExpert_Network(BaseNetwork):
         # if config.equal_modal_selection == "True":
         #     self.equal_modal_selection = True
 
-
-
         # original network
         self.inputs, self.phase, self.action, self.action_prediction_mean, self.action_prediction_sigma, self.action_prediction_alpha, self.q_prediction = self.build_network(
             scope_name='actorexpert')
@@ -430,6 +428,8 @@ class ActorExpert_Network(BaseNetwork):
 
         old_best_mean = best_mean
         if self.use_policy_gd:
+        	# Here is where we find the max action value for the update, simply
+        	# set use_policy_gd to False
             best_mean = self.policy_gradient_ascent(alpha, mean, sigma, best_mean)
 
         return old_best_mean, best_mean
