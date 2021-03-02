@@ -4,9 +4,53 @@
 import numpy as np
 
 
+def create_agent(agent, config):
+    """
+    Creates an agent given the agent name and configuration dictionary
+
+    Parameters
+    ----------
+    agent : str
+        The name of the agent, one of 'linearAC' or 'SAC'
+    config : dict
+        The agent configuration dictionary
+
+    Returns
+    -------
+    baseAgent.BaseAgent
+        The agent to train
+    """
+    if agent.lower() == "lineargaussianactorcritic" or \
+       agent.lower() == "linearac":
+        from linearAC import LinearAC
+        return LinearAC(config["decay"], config["actor_lr"],
+                        config["critic_lr"], config["avg_reward_lr"],
+                        config["feature_size"], config["gamma"],
+                        config["accumulate_trace"], config["scaled"],
+                        clip_stddev=config["clip_stddev"],
+                        seed=config["seed"])
+
+    if agent.lower() == "sac":
+        from sac import SAC
+        return SAC(num_inputs=config["feature_size"],
+                   action_space=config["action_space"],
+                   gamma=config["gamma"], tau=config["tau"],
+                   alpha=config["alpha"], policy=config["policy_type"],
+                   target_update_interval=config["target_update_interval"],
+                   critic_lr=config["critic_lr"], actor_lr=config["actor_lr"],
+                   alpha_lr=config["alpha_lr"],
+                   actor_hidden_dim=config["actor_hidden_dim"],
+                   critic_hidden_dim=config["critic_hidden_dim"],
+                   replay_capacity=config["replay_capacity"],
+                   seed=config["seed"], batch_size=config["batch_size"],
+                   automatic_entropy_tuning=config["automatic_entropy_tuning"],
+                   cuda=config["cuda"], clip_stddev=config["clip_stddev"])
+
+
 def get_sweep_parameters(parameters, env_config, index):
     """
     Gets the parameters for the hyperparameter sweep defined by the index.
+
     Each hyperparameter setting has a specific index number, and this function
     will get the appropriate parameters for the argument index. In addition,
     this the indices will wrap around, so if there are a total of 10 different
@@ -37,6 +81,7 @@ def get_sweep_parameters(parameters, env_config, index):
         index)
     """
     out_params = {}
+    out_params["gamma"] = env_config["gamma"]
     accum = 1
     for key in parameters:
         num = len(parameters[key])
@@ -419,8 +464,7 @@ def get_mean_stderr(data, type_, ind, smooth_over):
     elif type_ == "train":
         timesteps_per_ep = \
             data["experiment_data"][ind]["runs"][0]["train_episode_steps"]
-        ep = data["experiment_data"][ind]["runs"][0]["total_train_episodes"]
-        timesteps = [timesteps_per_ep[i] * i for i in range(ep)]
+        timesteps = get_cumulative_timesteps(timesteps_per_ep)
 
     # Get the mean over all episodes per evaluation step (for online
     # returns, this axis will have length 1 so we squeeze it)
@@ -435,9 +479,47 @@ def get_mean_stderr(data, type_, ind, smooth_over):
     # Get the mean over all runs
     mean = mean.mean(axis=0)
 
-    # Smooth of last k returns if applicable
-    if smooth_over != 0:
+    # Smooth of last k returns if applicable, convolve will initially only
+    # start sliding from the beginning, so we need to cut off the initial
+    # averages which are incomplete
+    if smooth_over > 1:
         mean = np.convolve(mean, np.ones(smooth_over) /
-                           smooth_over)[:mean.shape[0]]
+                           smooth_over, mode="valid") #[smooth_over:mean.shape[0]]
+        std = np.convolve(std, np.ones(smooth_over) /
+                           smooth_over, mode="valid") #[smooth_over:std.shape[0]]
+
+        # np.convolve only goes until the last element of the convolution
+        # lines up with the last element of the data, so smooth_over elements
+        # will be lost
+        timesteps = timesteps[:-smooth_over + 1]
 
     return timesteps, mean, std
+
+
+def get_cumulative_timesteps(timesteps_per_episode):
+    """
+    Creates an array of cumulative timesteps.
+
+    Creates an array of timesteps, where each timestep is the cumulative
+    number of timesteps up until that point. This is needed for plotting the
+    training data, where  the training timesteps are stored for each episode,
+    and we need to plot on the x-axis the cumulative timesteps, not the
+    timesteps per episode.
+
+    Parameters
+    ----------
+    timesteps_per_episode : list
+        A list where each element in the list denotes the amount of timesteps
+        for the corresponding episode.
+
+    Returns
+    -------
+    array_like
+        An array where each element is the cumulative number of timesteps up
+        until that point.
+    """
+    timesteps_per_episode = np.array(timesteps_per_episode)
+    cumulative_timesteps = [timesteps_per_episode[:i].sum()
+                            for i in range(timesteps_per_episode.shape[0])]
+
+    return np.array(cumulative_timesteps)
